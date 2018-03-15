@@ -79,22 +79,6 @@ class Node (val id:Int, val terminaux:List[Terminal]) extends Actor {
             beatActor ! LeaderChanged(nodeId)
           }
 
-          case event : akka.remote.DisassociatedEvent =>{
-            println("Erreur")
-          }
-
      }
-
-     override def preStart: Unit ={
-       //super.preStart()
-       context.system.eventStream.subscribe(self, classOf[akka.remote.DisassociatedEvent])
-     }
-
-     override def unhandled(message: Any): Unit = message match {
-        case akka.remote.DisassociatedEvent(local, remote, _) =>
-        /*  log.info(s"Forked executor system $remote disassociated from $local ...")
-        case x => super.unhandled(x)*/
-
-      }
 
 }

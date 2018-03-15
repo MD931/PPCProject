@@ -39,7 +39,7 @@ class CheckerActor (val id:Int, val terminaux:List[Terminal], electionActor:Acto
 
         // A chaque fois qu'on recoit un Beat : on met a jour la liste des nodes
         case IsAlive (nodeId) => {
-          println(nodesAlive)
+          //println(nodesAlive)
           if(nodesAlive(nodeId) != -1){
             //Mettre à jour sa date
             datesForChecking = datesForChecking.updated(nodeId, new Date)
@@ -48,20 +48,14 @@ class CheckerActor (val id:Int, val terminaux:List[Terminal], electionActor:Acto
             datesForChecking = datesForChecking.updated(nodeId, new Date)
             father ! Message("New node created "+nodeId)
           }
-          /*if(!nodesAlive.contains(nodeId)){
-            father ! Message("New node created "+nodeId)
-            nodesAlive = nodeId :: nodesAlive
-            datesForChecking = new Date :: datesForChecking
-          }else{
-            datesForChecking = datesForChecking.updated(nodesAlive.indexOf(nodeId), new Date)
-          }*/
         }
 
         case IsAliveLeader (nodeId) =>{
 
           if(nodeId != leader){
             leader = nodeId
-            println("The new leader is "+leader)
+            father ! Message("The new leader is "+leader)
+            electionActor ! Reinitialize
           }
           if(nodesAlive(nodeId) != -1){
             //Mettre à jour sa date
@@ -71,23 +65,15 @@ class CheckerActor (val id:Int, val terminaux:List[Terminal], electionActor:Acto
             datesForChecking = datesForChecking.updated(nodeId, new Date)
             father ! Message("The leader node is "+nodeId)
           }
-          /*if(!nodesAlive.contains(nodeId)){
-            father ! Message("The leader node is "+nodeId)
-            nodesAlive = nodeId :: nodesAlive
-            datesForChecking = new Date :: datesForChecking
-          }else{
-            datesForChecking = datesForChecking.updated(nodesAlive.indexOf(nodeId), new Date)
-          }*/
         }
 
         // A chaque fois qu'on recoit un CheckerTick : on verifie qui est mort ou pas
         // Objectif : lancer l'election si le leader est mort
         case CheckerTick => {
-          father ! Message("CheckerTick")
           lastDate = new Date
           for(i <- 0 until datesForChecking.length){
             if(id != i){
-              if((lastDate.getTime - datesForChecking(i).getTime)>3000){
+              if((lastDate.getTime - datesForChecking(i).getTime).millis > Const.NODE_DECLARED_DEAD){
 
                 if(i == leader && nodesAlive(i) != -1){
                   nodesAlive = nodesAlive.updated(i, -1)
@@ -97,14 +83,7 @@ class CheckerActor (val id:Int, val terminaux:List[Terminal], electionActor:Acto
               }
             }
           }
-          /*datesForChecking.foreach(date => {
-            if((lastDate.getTime - date.getTime)>time){
-              val i = datesForChecking.indexOf(date)
-              nodesAlive = nodesAlive diff List(nodesAlive(i))
-              datesForChecking = datesForChecking diff List(date)
-            }
-          })*/
-          scheduler.scheduleOnce(3000 milliseconds, self , CheckerTick )
+          scheduler.scheduleOnce(Const.CHECK_PERIOD , self , CheckerTick )
         }
 
     }

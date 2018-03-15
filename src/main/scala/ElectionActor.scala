@@ -14,6 +14,8 @@ case class Initiate () extends LeaderAlgoMessage
 case class ALG (list:List[Int], nodeId:Int) extends LeaderAlgoMessage
 case class AVS (list:List[Int], nodeId:Int) extends LeaderAlgoMessage
 case class AVSRSP (list:List[Int], nodeId:Int) extends LeaderAlgoMessage
+//Class utilisée pour réinitilisé la variable Status
+case class Reinitialize () extends LeaderAlgoMessage
 
 case class StartWithNodeList (list:List[Int])
 
@@ -65,6 +67,11 @@ class ElectionActor (val id:Int, val terminaux:List[Terminal]) extends Actor {
                self ! Initiate
           }
 
+          //Mettre le status à passive lorsque un nouveau leader est élu
+          case Reinitialize =>{
+            status = new Passive()
+          }
+
           case Initiate =>{
             //println("Initiate id="+id+" status="+status+" nodesAlive="+nodesAlive)
             status match{
@@ -99,8 +106,9 @@ class ElectionActor (val id:Int, val terminaux:List[Terminal]) extends Actor {
                   father ! LeaderChanged(id)
                 }
               }
-              case a : Any =>{
-                println("Rien "+a)
+              case Dummy() =>{
+                status = new Passive()
+                self ! Initiate
               }
             }
           }

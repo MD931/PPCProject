@@ -2,9 +2,14 @@ package upmc.akka.leader
 
 import com.typesafe.config.ConfigFactory
 import akka.actor._
+import scala.concurrent.duration._
 
 case class Terminal (id:Int, ip:String, port:Int)
-
+object Const{
+  val HEART_BEAT_PERIOD = 1000 milliseconds
+  val CHECK_PERIOD = HEART_BEAT_PERIOD * 2
+  val NODE_DECLARED_DEAD = HEART_BEAT_PERIOD * 5
+}
 object Projet {
 
      // Permet de communiquer avec les autres nodes
